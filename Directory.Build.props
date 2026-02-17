@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <LangVersion>latest</LangVersion>
+
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableStyleCopAnalyzers>true</EnableStyleCopAnalyzers>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+
+    <CodeAnalysisConfigPath Condition=" '$(CodeAnalysisConfigPath)' == '' ">$(MSBuildThisFileDirectory)</CodeAnalysisConfigPath>
+    <CodeAnalysisConfigFilePath Condition=" '$(CodeAnalysisConfigFilePath)' == '' ">$(CodeAnalysisConfigPath)stylecop.json</CodeAnalysisConfigFilePath>
+    <CodeAnalysisConfigRuleSetFilePath Condition=" '$(CodeAnalysisConfigRuleSetFilePath)' == '' ">$(CodeAnalysisConfigPath)stylecop.ruleset</CodeAnalysisConfigRuleSetFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="DynamicDependentFile" />
+    <ProjectCapability Include="DynamicFileNesting" />
+    <ProjectCapability Include="ConfigurableFileNesting" />
+    <ProjectCapability Include="ConfigurableFileNestingFeatureEnabled" />
+  </ItemGroup>
+</Project>

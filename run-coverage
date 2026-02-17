@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+echo "🧹 Cleaning up previous results..."
+find . -type d -name "TestResults" -exec rm -rf {} +
+rm -rf coveragereport
+
+echo "🧪 Running tests with code coverage..."
+dotnet test --coverage --coverage-output-format cobertura
+
+echo "📊 Generating coverage report..."
+reportgenerator -reports:"**/TestResults/*cobertura.xml" -targetdir:"coveragereport" -reporttypes:"Html;TextSummary"
+
+echo "📖 Opening report..."
+open coveragereport/index.html
+
+echo "📝 Summary:"
+cat coveragereport/Summary.txt
+
+echo "✅ Done!"

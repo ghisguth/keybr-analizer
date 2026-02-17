@@ -1,0 +1,2 @@
+# This file overrides the gitignore for CLI purposes
+!.plan.md

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/KeybrAnalyzer.IntegrationTests/KeybrAnalyzer.IntegrationTests.csproj" />
+  <Project Path="src/KeybrAnalyzer/KeybrAnalyzer.csproj" />
+  <Project Path="src/KeybrAnalyzer.Tests/KeybrAnalyzer.Tests.csproj" />
+</Solution>

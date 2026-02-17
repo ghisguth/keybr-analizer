@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.pdf binary
+
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.cs text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.ruleset text eol=lf
+*.ini text eol=lf
+*.targets text eol=lf
+*.props text eol=lf
+*.csproj text eol=lf
+*.proj text eol=lf
+.gitattributes text eol=lf
+.editorconfig text eol=lf

@@ -1,0 +1,13 @@
+<Project>
+  <!-- Add CLSCompliant attribute to auto-generated AssemblyInfo -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.CLSCompliantAttribute">
+      <_Parameter1>false</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <!-- stylecop configuration -->
+  <ItemGroup>
+    <AdditionalFiles Include="$(CodeAnalysisConfigFilePath)" Link="stylecop.json" Visible="false" />
+  </ItemGroup>
+</Project>
