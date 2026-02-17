@@ -2,6 +2,8 @@
 
 A .NET console application that analyzes typing data exported from [Keybr.com](https://www.keybr.com/). It provides detailed insights into your typing performance, including speed (WPM), accuracy, and key-specific latency across different time periods, with a special focus on C# programming.
 
+![Init screen](docs/media/screen1.png)
+
 ## Features
 
 - **Automatic Data Discovery**: Automatically finds the latest `typing-data*.json` file in your `~/Downloads` folder or a custom path.
@@ -22,6 +24,11 @@ A .NET console application that analyzes typing data exported from [Keybr.com](h
   - **Visual Keyboard Layouts**: Visual progress maps by finger, key type, or status (Unlocked/Locked).
   - **Visual Feedback**: Uses ANSI colors and sparklines for rich terminal output.
 
+
+![Mastery](docs/media/screen2.png)
+
+![Targets](docs/media/screen3.png)
+
 ## Prerequisites
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
@@ -32,6 +39,33 @@ A .NET console application that analyzes typing data exported from [Keybr.com](h
 2. **Run the analyzer**:
    ```bash
    dotnet run --project src/KeybrAnalyzer/KeybrAnalyzer.csproj
+   ```
+
+## Installation
+
+To install the analyzer as a standalone tool:
+
+1. **Publish the application**:
+   ```bash
+   dotnet publish -c Release -r osx-arm64 --self-contained
+   ```
+   *(Note: Change `osx-arm64` to your specific platform if necessary, e.g., `osx-x64` or `linux-x64`.)*
+
+2. **Copy the binary to your local bin**:
+   ```bash
+   cp src/KeybrAnalyzer/bin/Release/net10.0/osx-arm64/publish/analyzekeybr ~/.local/bin/analyzekeybr
+   ```
+
+3. **Update your PATH**:
+   Ensure `~/.local/bin` is in your `PATH` by adding this to your `.zshrc` or `.bashrc`:
+   ```bash
+   export PATH="$HOME/.local/bin:$PATH"
+   ```
+
+4. **Usage**:
+   Now you can run the analyzer from any directory:
+   ```bash
+   analyzekeybr
    ```
 
 ## Configuration
