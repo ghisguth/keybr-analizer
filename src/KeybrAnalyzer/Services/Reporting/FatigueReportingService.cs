@@ -13,11 +13,11 @@ public class FatigueReportingService(IConsoleHelper consoleHelper) : IFatigueRep
 
 		var fatigue = sessions.GroupBy(s => s.TimeStamp.ToLocalTime().Date)
 			.SelectMany(g => g.OrderBy(s => s.TimeStamp).Select((s, i) => new { Index = i, s }))
-			.GroupBy(x => Math.Min(x.Index / 5, 5))
+			.GroupBy(x => Math.Min(x.Index / 5, 20))
 			.OrderBy(g => g.Key)
 			.Select(g => new
 			{
-				Block = g.Key == 5 ? "25+" : $"{(g.Key * 5) + 1}-{(g.Key * 5) + 5}",
+				Block = g.Key == 10 ? "50+" : $"{(g.Key * 5) + 1}-{(g.Key * 5) + 5}",
 				Sess = g.Count(),
 				Wpm = g.Average(x => x.s.Speed) / 5.0,
 				Acc = g.Average(x => 1.0 - ((double)x.s.Errors / x.s.Length)) * 100

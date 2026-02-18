@@ -24,7 +24,7 @@ public class KeybrAnalyzerOptions
 
 	public Collection<string> FocusKeys { get; } =
 	[
-		"4 5 6 8 0 _ \\"
+		"\" ) 4 5 6 8 0"
 	];
 
 	public Dictionary<string, Collection<string>> LockedKeys { get; } = new()
