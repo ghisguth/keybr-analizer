@@ -70,10 +70,46 @@ To install the analyzer as a standalone tool:
 
 ## Configuration
 
-You can configure the analyzer via `appsettings.json` or environment variables:
+The analyzer follows a specific order of priority for configuration (last one wins):
 
-- `KeybrAnalyzer:DataFilePath`: Direct path to a specific typing-data.json file.
-- `KeybrAnalyzer:SourceDirectory`: Directory to search for typing-data*.json files.
+1. **Windows AppData (Roaming)**: `%AppData%\keybranalyzer\config.json`
+2. **Windows AppData (Local)**: `%LocalAppData%\keybranalyzer\config.json`
+3. **User Home (macOS/Linux)**: `~/.config/keybranalyzer/config.json`
+4. **Environment Variables**: Prefixed with `KeybrAnalyzer__` (e.g., `KeybrAnalyzer__ShowAllStats=true`).
+5. **Command Line Arguments**: (e.g., `--KeybrAnalyzer:ShowAllStats=true`).
+
+### Sample `config.json`
+
+Create a file at `~/.config/keybranalyzer/config.json` (macOS/Linux) or the corresponding Windows path:
+
+```json
+{
+  "KeybrAnalyzer": {
+    "ShowAllStats": true,
+    "OpenedKeys": [
+      "abcdefghijklmnopqrstuvwxyz",
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "; : . ,",
+      "' \"",
+      "( ) [ ] { }"
+    ],
+    "FocusKeys": [
+      "( ) [ ] { }"
+    ],
+    "LockedKeys": {
+      "Tier 1 (Basic Operators)": ["_ / + - = * < >"],
+      "Tier 2 (Logical Operators)": ["! % & |"],
+      "Tier 3 (Advanced C#)": ["@ # ^ \\ ~ ? ` $"],
+      "Tier 4 (Numbers)": ["1 2 3 4 5 6 7 8 9 0"]
+    }
+  }
+}
+```
+
+### Options
+
+- `KeybrAnalyzer:DataFilePath`: Direct path to a specific `typing-data.json` file.
+- `KeybrAnalyzer:SourceDirectory`: Directory to search for `typing-data*.json` files. Defaults to `~/Downloads`.
 - `KeybrAnalyzer:ShowAllStats`: Set to `true` to enable verbose reporting (detailed layout maps, etc.).
 - `KeybrAnalyzer:OpenedKeys`: List of keys currently unlocked in your training.
 - `KeybrAnalyzer:FocusKeys`: List of keys you are currently focusing on.
