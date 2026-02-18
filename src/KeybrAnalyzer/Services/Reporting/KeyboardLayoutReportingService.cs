@@ -16,21 +16,33 @@ public class KeyboardLayoutReportingService(
 		{
 			KeyboardMode.Finger => "VISUAL PROGRESS BY FINGER",
 			KeyboardMode.KeyType => "VISUAL PROGRESS BY KEY TYPE",
-			KeyboardMode.Status => "VISUAL PROGRESS BY STATUS (Unlocked/Locked)",
+			KeyboardMode.Status => "VISUAL PROGRESS BY STATUS (Unlocked/Focus/Locked)",
 			_ => throw new ArgumentOutOfRangeException(nameof(mode))
 		};
 		consoleHelper.WriteTitle(title);
 
 		var openedKeys = new HashSet<char>(options.Value.OpenedKeys.SelectMany(GetKeysFromCollection));
-		var lockedKeys = new HashSet<char>(options.Value.LockedKeys.Values.SelectMany(c => c).SelectMany(GetKeysFromCollection));
+		var focusKeys = new HashSet<char>(options.Value.FocusKeys.SelectMany(GetKeysFromCollection));
+		var lockedKeys = new HashSet<char>(options.Value.LockedKeys.Values.SelectMany(GetKeysFromCollection));
 
 		foreach (var (shifted, normal) in KeyboardLayoutData.Layout)
 		{
-			consoleHelper.WriteLine(string.Join(string.Empty, shifted.Select(k => FormatKey(k, openedKeys, lockedKeys, mode))));
-			consoleHelper.WriteLine(string.Join(string.Empty, normal.Select(k => FormatKey(k, openedKeys, lockedKeys, mode))));
+			for (var i = 0; i < shifted.Length; i++)
+			{
+				consoleHelper.Write(FormatKey(shifted[i], openedKeys, focusKeys, lockedKeys, mode));
+			}
+
+			consoleHelper.WriteLine();
+
+			for (var i = 0; i < normal.Length; i++)
+			{
+				consoleHelper.Write(FormatKey(normal[i], openedKeys, focusKeys, lockedKeys, mode));
+			}
+
+			consoleHelper.WriteLine();
 		}
 
-		var spaceKey = FormatKey("                         SPACE                         ", openedKeys, lockedKeys, mode);
+		var spaceKey = FormatKey("                         SPACE                         ", openedKeys, focusKeys, lockedKeys, mode);
 		consoleHelper.WriteLine($"            {spaceKey}");
 		consoleHelper.WriteLine();
 
@@ -39,7 +51,8 @@ public class KeyboardLayoutReportingService(
 
 	private static bool IsSpecialKey(string key)
 	{
-		return key == "SPACE" || key == "TAB" || key == "CAPS" || key == "ENTER" || key.Contains("SHIFT", StringComparison.Ordinal);
+		var trimmed = key.Trim();
+		return trimmed == "SPACE" || trimmed == "TAB" || trimmed == "CAPS" || trimmed == "ENTER" || trimmed == "BACKSPACE" || trimmed.Contains("SHIFT", StringComparison.Ordinal);
 	}
 
 	private static string GetFingerColor(char c) => c switch
@@ -58,14 +71,9 @@ public class KeyboardLayoutReportingService(
 
 	private static string GetKeyTypeColorBg(char c)
 	{
-		if (char.IsLower(c))
+		if (char.IsLower(c) || char.IsUpper(c))
 		{
-			return Ansi.BgBlue;
-		}
-
-		if (char.IsUpper(c))
-		{
-			return Ansi.BgCyan;
+			return char.IsLower(c) ? Ansi.BgBlue : Ansi.BgCyan;
 		}
 
 		if (char.IsDigit(c))
@@ -81,19 +89,25 @@ public class KeyboardLayoutReportingService(
 		return Ansi.BgMagenta;
 	}
 
+	private static IEnumerable<char> GetKeysFromCollection(IEnumerable<string> collection)
+	{
+		return collection.SelectMany(GetKeysFromCollection);
+	}
+
 	private static IEnumerable<char> GetKeysFromCollection(string s)
 	{
 		return s.Contains(' ', StringComparison.Ordinal) ? s.Split(' ', StringSplitOptions.RemoveEmptyEntries).SelectMany(p => p) : s;
 	}
 
-	private static string FormatSingleChar(char c, HashSet<char> opened, HashSet<char> locked, KeyboardMode mode)
+	private static string FormatSingleChar(char c, HashSet<char> opened, HashSet<char> focus, HashSet<char> locked, KeyboardMode mode)
 	{
-		var isOpened = opened.Contains(c);
+		var isFocus = focus.Contains(c);
+		var isOpened = opened.Contains(c) || isFocus;
 		var isLocked = locked.Contains(c) || (!isOpened && !char.IsWhiteSpace(c));
 
 		var bg = mode switch
 		{
-			KeyboardMode.Status => isOpened ? Ansi.BgGreen : (isLocked ? Ansi.BgRed : string.Empty),
+			KeyboardMode.Status => isFocus ? Ansi.BgYellow : (isOpened ? Ansi.BgGreen : (isLocked ? Ansi.BgRed : Ansi.BgWhite)),
 			KeyboardMode.Finger => GetFingerColor(c),
 			KeyboardMode.KeyType => GetKeyTypeColorBg(c),
 			_ => Ansi.BgWhite
@@ -114,7 +128,7 @@ public class KeyboardLayoutReportingService(
 		return $"{bg}{fg}{style} {c} {Ansi.Reset}";
 	}
 
-	private static string FormatKey(string key, HashSet<char> opened, HashSet<char> locked, KeyboardMode mode)
+	private static string FormatKey(string key, HashSet<char> opened, HashSet<char> focus, HashSet<char> locked, KeyboardMode mode)
 	{
 		if (string.IsNullOrWhiteSpace(key))
 		{
@@ -124,10 +138,10 @@ public class KeyboardLayoutReportingService(
 		var trimmed = key.Trim();
 		if (trimmed.Length == 1 && !IsSpecialKey(trimmed))
 		{
-			return FormatSingleChar(trimmed[0], opened, locked, mode);
+			return FormatSingleChar(trimmed[0], opened, focus, locked, mode);
 		}
 
-		if (key.TrimStart().StartsWith('[') || key.Contains("SPACE", StringComparison.Ordinal))
+		if (trimmed.StartsWith('[') || trimmed.Contains("SPACE", StringComparison.Ordinal))
 		{
 			return $"{Ansi.Bold}{key}{Ansi.Reset}";
 		}
@@ -147,7 +161,7 @@ public class KeyboardLayoutReportingService(
 		}
 		else
 		{
-			consoleHelper.WriteLine($"{Ansi.Bold}Status Legend:{Ansi.Reset} {Ansi.BgGreen}   {Ansi.Reset} Unlocked | {Ansi.BgRed}   {Ansi.Reset} Locked");
+			consoleHelper.WriteLine($"{Ansi.Bold}Status Legend:{Ansi.Reset} {Ansi.BgGreen}   {Ansi.Reset} Unlocked | {Ansi.BgYellow}   {Ansi.Reset} Focus | {Ansi.BgRed}   {Ansi.Reset} Locked");
 		}
 
 		consoleHelper.WriteLine();

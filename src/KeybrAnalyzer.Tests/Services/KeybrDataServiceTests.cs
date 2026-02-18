@@ -44,7 +44,7 @@ public sealed class KeybrDataServiceTests : IDisposable
 	}
 
 	[Fact]
-	public async Task LoadLatestSessionsAsyncShouldDeserializeCorrectly()
+	public async Task LoadLatestSessionsAsyncShouldDeserializeCorrectlyAsync()
 	{
 		// Arrange
 		var file = Path.Combine(_testDir, "typing-data-1.json");

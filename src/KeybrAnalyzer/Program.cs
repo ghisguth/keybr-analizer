@@ -1,11 +1,13 @@
 using KeybrAnalyzer.Helpers;
-using KeybrAnalyzer.Options;
 using KeybrAnalyzer.Services;
 using KeybrAnalyzer.Services.Reporting;
 
 using Microsoft.Extensions.Logging.Console;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+// Load custom configuration from home directory, AppData/Local and AppData/Roaming
+builder.Configuration.AddKeybrConfiguration(args);
 
 // Logging Defaults (overridable by appsettings.json)
 builder.Logging.AddFilter("Default", LogLevel.Error);
@@ -21,7 +23,7 @@ builder.Logging.AddSimpleConsole(options =>
 	options.ColorBehavior = LoggerColorBehavior.Default;
 });
 
-builder.Services.Configure<KeybrAnalyzerOptions>(builder.Configuration.GetSection(KeybrAnalyzerOptions.SectionName));
+builder.Services.AddKeybrAnalyzerOptions(builder.Configuration);
 
 builder.Services.AddSingleton<ITableWriter>(new TableWriter(Console.Out));
 builder.Services.AddSingleton<IConsoleHelper, ConsoleHelper>();
