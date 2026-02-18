@@ -7,21 +7,25 @@ public static class ConfigurationBuilderExtensions
 		ArgumentNullException.ThrowIfNull(builder);
 
 		// Order of priority (last one wins):
-		// 1. AppData Roaming
-		// 2. AppData Local
-		// 3. User Home (~/.config/keybranalyzer/config.json)
+		// 1. AppData Roaming (config.ini, then config.json)
+		// 2. AppData Local (config.ini, then config.json)
+		// 3. User Home (config.ini, then config.json)
 		// 4. Environment Variables
 		// 5. Command Line Arguments
-		var searchPaths = new List<string>
+		var searchDirectories = new List<string>
 		{
-			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "keybranalyzer", "config.json"),
-			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "keybranalyzer", "config.json"),
-			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "keybranalyzer", "config.json")
+			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "keybranalyzer"),
+			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "keybranalyzer"),
+			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "keybranalyzer")
 		};
 
-		foreach (var path in searchPaths.Where(p => !string.IsNullOrWhiteSpace(p)).Distinct())
+		foreach (var dir in searchDirectories.Where(d => !string.IsNullOrWhiteSpace(d)).Distinct())
 		{
-			builder.AddJsonFile(path, optional: true, reloadOnChange: true);
+			if (Directory.Exists(dir))
+			{
+				builder.AddIniFile(Path.Combine(dir, "config.ini"), optional: true, reloadOnChange: true);
+				builder.AddJsonFile(Path.Combine(dir, "config.json"), optional: true, reloadOnChange: true);
+			}
 		}
 
 		builder.AddEnvironmentVariables();

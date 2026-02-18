@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
   </ItemGroup>

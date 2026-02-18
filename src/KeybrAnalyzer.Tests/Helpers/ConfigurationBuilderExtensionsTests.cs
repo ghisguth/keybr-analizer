@@ -53,6 +53,29 @@ public sealed class ConfigurationBuilderExtensionsTests : IDisposable
 		config["KeybrAnalyzer:ShowAllStats"].ShouldBe("true");
 	}
 
+	[Fact]
+	public void AddIniFileShouldWorkWithCorrectFormat()
+	{
+		// This test verifies our assumption about INI format for collections
+		// Arrange
+		var builder = new ConfigurationBuilder();
+		var iniPath = Path.Combine(_testRoot, "test.ini");
+		var content = """
+			[KeybrAnalyzer]
+			OpenedKeys:0=abc
+			OpenedKeys:1=def
+			""";
+		File.WriteAllText(iniPath, content);
+
+		// Act
+		builder.AddIniFile(iniPath);
+		var config = builder.Build();
+
+		// Assert
+		config["KeybrAnalyzer:OpenedKeys:0"].ShouldBe("abc");
+		config["KeybrAnalyzer:OpenedKeys:1"].ShouldBe("def");
+	}
+
 	public void Dispose()
 	{
 		if (Directory.Exists(_testRoot))

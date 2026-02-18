@@ -72,9 +72,9 @@ To install the analyzer as a standalone tool:
 
 The analyzer follows a specific order of priority for configuration (last one wins):
 
-1. **Windows AppData (Roaming)**: `%AppData%\keybranalyzer\config.json`
-2. **Windows AppData (Local)**: `%LocalAppData%\keybranalyzer\config.json`
-3. **User Home (macOS/Linux)**: `~/.config/keybranalyzer/config.json`
+1. **Windows AppData (Roaming)**: `%AppData%\keybranalyzer\config.ini` then `config.json`
+2. **Windows AppData (Local)**: `%LocalAppData%\keybranalyzer\config.ini` then `config.json`
+3. **User Home (macOS/Linux)**: `~/.config/keybranalyzer/config.ini` then `config.json`
 4. **Environment Variables**: Prefixed with `KeybrAnalyzer__` (e.g., `KeybrAnalyzer__ShowAllStats=true`).
 5. **Command Line Arguments**: (e.g., `--KeybrAnalyzer:ShowAllStats=true`).
 
@@ -104,6 +104,20 @@ Create a file at `~/.config/keybranalyzer/config.json` (macOS/Linux) or the corr
     }
   }
 }
+```
+
+### Sample `config.ini`
+
+Alternatively, you can use an INI file:
+
+```ini
+[KeybrAnalyzer]
+ShowAllStats=true
+OpenedKeys:0=abcdefghijklmnopqrstuvwxyz
+OpenedKeys:1=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+; ...
+FocusKeys:0=( ) [ ] { }
+LockedKeys:Tier 4 (Numbers):0=1 2 3 4 5 6 7 8 9 0
 ```
 
 ### Options
