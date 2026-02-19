@@ -9,12 +9,13 @@ namespace KeybrAnalyzer.Tests.Services.Reporting;
 public sealed class SummaryReportingServiceTests
 {
 	private readonly IConsoleHelper _consoleHelper = Substitute.For<IConsoleHelper>();
+	private readonly ITrainingStateService _trainingStateService = Substitute.For<ITrainingStateService>();
 
 	[Fact]
 	public void PrintSessionSummaryShouldCalculateAverages()
 	{
 		// Arrange
-		var sut = new SummaryReportingService(_consoleHelper);
+		var sut = new SummaryReportingService(_consoleHelper, _trainingStateService);
 		var sessions = new List<KeybrSession>
 		{
 			new(DateTime.Now, 50, 0, 10, 1000, "code", []), // 50 speed -> 10 wpm
@@ -33,7 +34,7 @@ public sealed class SummaryReportingServiceTests
 	public void PrintMilestonesShouldCallWriteTable()
 	{
 		// Arrange
-		var sut = new SummaryReportingService(_consoleHelper);
+		var sut = new SummaryReportingService(_consoleHelper, _trainingStateService);
 		var sessions = new List<KeybrSession>
 		{
 			new(DateTime.Now, 100, 0, 10, 1000, "code", [])
@@ -48,5 +49,26 @@ public sealed class SummaryReportingServiceTests
 			Arg.Any<IEnumerable<string[]>>(),
 			Arg.Any<bool[]>(),
 			title: Arg.Is<string>(t => t.Contains("MILESTONES")));
+	}
+
+	[Fact]
+	public void PrintTrainingStateShouldOutputFromService()
+	{
+		// Arrange
+		var sut = new SummaryReportingService(_consoleHelper, _trainingStateService);
+		var state = new TrainingStateModel
+		{
+			UnlockedGroups =
+			[
+				new KeyGroupModel { Keys = [new KeyStatusModel { Key = 'a', Status = KeyStatus.Unlocked }] }
+			]
+		};
+		_trainingStateService.GetTrainingState().Returns(state);
+
+		// Act
+		sut.PrintTrainingState();
+
+		// Assert
+		_consoleHelper.Received().Write(Arg.Is<string>(s => s.Contains('a')));
 	}
 }

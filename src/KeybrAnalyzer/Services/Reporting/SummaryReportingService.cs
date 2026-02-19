@@ -5,7 +5,10 @@ using KeybrAnalyzer.Models;
 
 namespace KeybrAnalyzer.Services.Reporting;
 
-public class SummaryReportingService(IConsoleHelper consoleHelper) : ISummaryReportingService
+public class SummaryReportingService(
+	IConsoleHelper consoleHelper,
+	ITrainingStateService trainingStateService)
+	: ISummaryReportingService
 {
 	public void PrintHeader()
 	{
@@ -88,36 +91,67 @@ public class SummaryReportingService(IConsoleHelper consoleHelper) : ISummaryRep
 		consoleHelper.WriteLine();
 	}
 
-	public void PrintTrainingState(IEnumerable<string> opened, IEnumerable<string> focus, IDictionary<string, Collection<string>> locked)
+	public void PrintTrainingState()
 	{
-		ArgumentNullException.ThrowIfNull(opened);
-		ArgumentNullException.ThrowIfNull(focus);
-		ArgumentNullException.ThrowIfNull(locked);
+		var state = trainingStateService.GetTrainingState();
 
 		consoleHelper.WriteTitle("TRAINING PROGRESS SUMMARY");
 		consoleHelper.WriteLine($"{Ansi.Bold}Unlocked keys{Ansi.Reset} {Ansi.Green}✓{Ansi.Reset}:");
-		foreach (var s in opened)
+		foreach (var group in state.UnlockedGroups)
 		{
-			consoleHelper.WriteLine($"  {Ansi.Green}{s}{Ansi.Reset}");
+			consoleHelper.Write("  ");
+			foreach (var key in group.Keys)
+			{
+				consoleHelper.Write(FormatKey(key));
+			}
+
+			consoleHelper.WriteLine();
 		}
 
 		consoleHelper.WriteLine();
 		consoleHelper.WriteLine($"{Ansi.Bold}Focus keys (Structural){Ansi.Reset} {Ansi.Yellow}→{Ansi.Reset}:");
-		foreach (var s in focus)
+		foreach (var group in state.FocusGroups)
 		{
-			consoleHelper.WriteLine($"  {Ansi.Yellow}{s}{Ansi.Reset}");
+			consoleHelper.Write("  ");
+			foreach (var key in group.Keys)
+			{
+				consoleHelper.Write(FormatKey(key));
+			}
+
+			consoleHelper.WriteLine();
 		}
 
-		foreach (var (tier, keys) in locked)
+		foreach (var tier in state.LockedTiers)
 		{
 			consoleHelper.WriteLine();
-			consoleHelper.WriteLine($"{Ansi.Bold}Locked: {tier}{Ansi.Reset} {Ansi.Red}🔒{Ansi.Reset}:");
-			foreach (var s in keys)
+			consoleHelper.WriteLine($"{Ansi.Bold}Locked: {tier.Label}{Ansi.Reset} {Ansi.Red}🔒{Ansi.Reset}:");
+			consoleHelper.Write("  ");
+			foreach (var key in tier.Keys)
 			{
-				consoleHelper.WriteLine($"  {Ansi.Red}{s}{Ansi.Reset}");
+				consoleHelper.Write(FormatKey(key));
 			}
+
+			consoleHelper.WriteLine();
 		}
 
 		consoleHelper.WriteLine();
+	}
+
+	public void PrintTrainingState(IEnumerable<string> opened, IEnumerable<string> focus, IDictionary<string, Collection<string>> locked)
+	{
+		PrintTrainingState();
+	}
+
+	private static string FormatKey(KeyStatusModel key)
+	{
+		var color = key.Status switch
+		{
+			KeyStatus.Unlocked => Ansi.Green,
+			KeyStatus.Focus => Ansi.Yellow,
+			KeyStatus.Locked => Ansi.Red,
+			KeyStatus.None or _ => string.Empty
+		};
+
+		return $"{color}{key.Key}{Ansi.Reset}";
 	}
 }

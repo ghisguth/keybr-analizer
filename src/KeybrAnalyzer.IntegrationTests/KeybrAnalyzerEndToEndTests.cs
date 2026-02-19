@@ -40,6 +40,8 @@ public sealed class KeybrAnalyzerEndToEndTests : IDisposable
 		builder.Services.AddSingleton(_mockConsole);
 		builder.Services.AddSingleton<IKeybrDataService, KeybrDataService>();
 		builder.Services.AddSingleton<IKeybrAnalysisService, KeybrAnalysisService>();
+		builder.Services.AddSingleton<IKeyStatusService, KeyStatusService>();
+		builder.Services.AddSingleton<ITrainingStateService, TrainingStateService>();
 
 		// Reporting Services
 		builder.Services.AddSingleton<ISummaryReportingService, SummaryReportingService>();

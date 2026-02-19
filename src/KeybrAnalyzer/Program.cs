@@ -29,6 +29,8 @@ builder.Services.AddSingleton<ITableWriter>(new TableWriter(Console.Out));
 builder.Services.AddSingleton<IConsoleHelper, ConsoleHelper>();
 builder.Services.AddSingleton<IKeybrDataService, KeybrDataService>();
 builder.Services.AddSingleton<IKeybrAnalysisService, KeybrAnalysisService>();
+builder.Services.AddSingleton<IKeyStatusService, KeyStatusService>();
+builder.Services.AddSingleton<ITrainingStateService, TrainingStateService>();
 
 // Reporting Services
 builder.Services.AddSingleton<ISummaryReportingService, SummaryReportingService>();

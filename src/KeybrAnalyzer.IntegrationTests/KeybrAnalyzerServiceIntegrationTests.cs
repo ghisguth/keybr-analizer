@@ -74,6 +74,8 @@ public sealed class KeybrAnalyzerServiceIntegrationTests : IDisposable, IAsyncDi
 				services.AddSingleton<IConsoleHelper, ConsoleHelper>();
 				services.AddSingleton<IKeybrDataService, KeybrDataService>();
 				services.AddSingleton<IKeybrAnalysisService, KeybrAnalysisService>();
+				services.AddSingleton<IKeyStatusService, KeyStatusService>();
+				services.AddSingleton<ITrainingStateService, TrainingStateService>();
 
 				// Reporting
 				services.AddSingleton<ISummaryReportingService, SummaryReportingService>();

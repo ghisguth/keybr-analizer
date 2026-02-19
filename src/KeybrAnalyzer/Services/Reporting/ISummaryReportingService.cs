@@ -16,5 +16,7 @@ public interface ISummaryReportingService
 
 	void PrintHeaderMetric(string label, string value);
 
+	void PrintTrainingState();
+
 	void PrintTrainingState(IEnumerable<string> opened, IEnumerable<string> focus, IDictionary<string, Collection<string>> locked);
 }

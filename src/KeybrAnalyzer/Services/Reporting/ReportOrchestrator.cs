@@ -37,15 +37,15 @@ public class ReportOrchestrator(
 
 		if (codeSess.Count > 0 && normalSess.Count > 0)
 		{
-			var delta = (codeSess.Average(s => s.Speed) - normalSess.Average(s => s.Speed)) / 5.0;
-			var color = delta >= 0 ? Ansi.Green : Ansi.Red;
+			var delta = (normalSess.Average(s => s.Speed) - codeSess.Average(s => s.Speed)) / 5.0;
+			var color = delta <= 0 ? Ansi.Green : Ansi.Red;
 			summaryReporting.PrintHeaderMetric("DOMAIN GAP (CODE vs NATURAL)", $"{color}{delta:F1} WPM{Ansi.Reset}");
 		}
 
 		summaryReporting.PrintSessionSummary(todaySess, "STATISTICS FOR TODAY");
 		summaryReporting.PrintGeneralStats(l7Sess, "LAST 7 DAYS (TRAILING AVERAGE)");
 		fatigueReporting.PrintFatigueIndicator(sessions);
-		summaryReporting.PrintTrainingState(options.Value.OpenedKeys, options.Value.FocusKeys, options.Value.LockedKeys);
+		summaryReporting.PrintTrainingState();
 
 		if (options.Value.ShowAllStats)
 		{

@@ -1,13 +1,10 @@
 using KeybrAnalyzer.Helpers;
-using KeybrAnalyzer.Options;
-
-using Microsoft.Extensions.Options;
 
 namespace KeybrAnalyzer.Services.Reporting;
 
 public class KeyboardLayoutReportingService(
 	IConsoleHelper consoleHelper,
-	IOptions<KeybrAnalyzerOptions> options)
+	IKeyStatusService keyStatusService)
 	: IKeyboardLayoutReportingService
 {
 	public void PrintKeyboardLayout(KeyboardMode mode)
@@ -21,28 +18,24 @@ public class KeyboardLayoutReportingService(
 		};
 		consoleHelper.WriteTitle(title);
 
-		var openedKeys = new HashSet<char>(options.Value.OpenedKeys.SelectMany(GetKeysFromCollection));
-		var focusKeys = new HashSet<char>(options.Value.FocusKeys.SelectMany(GetKeysFromCollection));
-		var lockedKeys = new HashSet<char>(options.Value.LockedKeys.Values.SelectMany(GetKeysFromCollection));
-
 		foreach (var (shifted, normal) in KeyboardLayoutData.Layout)
 		{
 			for (var i = 0; i < shifted.Length; i++)
 			{
-				consoleHelper.Write(FormatKey(shifted[i], openedKeys, focusKeys, lockedKeys, mode));
+				consoleHelper.Write(FormatKey(shifted[i], mode));
 			}
 
 			consoleHelper.WriteLine();
 
 			for (var i = 0; i < normal.Length; i++)
 			{
-				consoleHelper.Write(FormatKey(normal[i], openedKeys, focusKeys, lockedKeys, mode));
+				consoleHelper.Write(FormatKey(normal[i], mode));
 			}
 
 			consoleHelper.WriteLine();
 		}
 
-		var spaceKey = FormatKey("                         SPACE                         ", openedKeys, focusKeys, lockedKeys, mode);
+		var spaceKey = FormatKey("                         SPACE                         ", mode);
 		consoleHelper.WriteLine($"            {spaceKey}");
 		consoleHelper.WriteLine();
 
@@ -89,25 +82,16 @@ public class KeyboardLayoutReportingService(
 		return Ansi.BgMagenta;
 	}
 
-	private static IEnumerable<char> GetKeysFromCollection(IEnumerable<string> collection)
+	private string FormatSingleChar(char c, KeyboardMode mode)
 	{
-		return collection.SelectMany(GetKeysFromCollection);
-	}
-
-	private static IEnumerable<char> GetKeysFromCollection(string s)
-	{
-		return s.Contains(' ', StringComparison.Ordinal) ? s.Split(' ', StringSplitOptions.RemoveEmptyEntries).SelectMany(p => p) : s;
-	}
-
-	private static string FormatSingleChar(char c, HashSet<char> opened, HashSet<char> focus, HashSet<char> locked, KeyboardMode mode)
-	{
-		var isFocus = focus.Contains(c);
-		var isOpened = opened.Contains(c) || isFocus;
-		var isLocked = locked.Contains(c) || (!isOpened && !char.IsWhiteSpace(c));
+		var status = keyStatusService.GetKeyStatus(c);
+		var isFocus = status is KeyStatus.Focus;
+		var isUnlocked = status is KeyStatus.Unlocked or KeyStatus.Focus;
+		var isLocked = status is KeyStatus.Locked;
 
 		var bg = mode switch
 		{
-			KeyboardMode.Status => isFocus ? Ansi.BgYellow : (isOpened ? Ansi.BgGreen : (isLocked ? Ansi.BgRed : Ansi.BgWhite)),
+			KeyboardMode.Status => isFocus ? Ansi.BgYellow : (isUnlocked ? Ansi.BgGreen : (isLocked ? Ansi.BgRed : Ansi.BgWhite)),
 			KeyboardMode.Finger => GetFingerColor(c),
 			KeyboardMode.KeyType => GetKeyTypeColorBg(c),
 			_ => Ansi.BgWhite
@@ -124,11 +108,11 @@ public class KeyboardLayoutReportingService(
 			fg = Ansi.Dim + Ansi.Black;
 		}
 
-		var style = isOpened ? Ansi.Bold : string.Empty;
+		var style = isUnlocked ? Ansi.Bold : string.Empty;
 		return $"{bg}{fg}{style} {c} {Ansi.Reset}";
 	}
 
-	private static string FormatKey(string key, HashSet<char> opened, HashSet<char> focus, HashSet<char> locked, KeyboardMode mode)
+	private string FormatKey(string key, KeyboardMode mode)
 	{
 		if (string.IsNullOrWhiteSpace(key))
 		{
@@ -138,7 +122,7 @@ public class KeyboardLayoutReportingService(
 		var trimmed = key.Trim();
 		if (trimmed.Length == 1 && !IsSpecialKey(trimmed))
 		{
-			return FormatSingleChar(trimmed[0], opened, focus, locked, mode);
+			return FormatSingleChar(trimmed[0], mode);
 		}
 
 		if (trimmed.StartsWith('[') || trimmed.Contains("SPACE", StringComparison.Ordinal))
