@@ -49,7 +49,7 @@ public class KeybrDataService(
 			searchPaths.Add(options.Value.SourceDirectory);
 		}
 
-		searchPaths.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"));
+		searchPaths.Add(GetDownloadsDirectory());
 
 		foreach (var path in searchPaths.Distinct())
 		{
@@ -70,4 +70,6 @@ public class KeybrDataService(
 
 		return null;
 	}
+
+	protected virtual string GetDownloadsDirectory() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 }

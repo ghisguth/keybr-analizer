@@ -121,4 +121,44 @@ public sealed class ReportOrchestratorTests
 		// Assert
 		_summaryReporting.DidNotReceive().PrintHeaderMetric(Arg.Is<string>(s => s.Contains("DOMAIN GAP")), Arg.Any<string>());
 	}
+
+	[Fact]
+	public void GenerateFullReportWithShowAllStatsShouldInvokeAllDetailedReports()
+	{
+		// Arrange
+		_options.Value.ShowAllStats = true;
+		var now = DateTime.Now;
+		var sessions = new List<KeybrSession>
+		{
+			new(now, 100, 0, 10, 60000, "code", []),
+			new(now, 100, 0, 10, 60000, "generated", []),
+			new(now, 100, 0, 10, 60000, "numbers", []),
+			new(now, 100, 0, 10, 60000, "natural", [])
+		};
+		var histogram = new List<KeyPerformance>
+		{
+			new() { Key = "A", L7H = 15, L7Err = 0.5, StallRatio = 3.0, L7CV = 1.0, L7Latency = 500 }
+		};
+
+		var sut = new ReportOrchestrator(
+			_options,
+			_analysisService,
+			_summaryReporting,
+			_performanceReporting,
+			_progressReporting,
+			_fatigueReporting,
+			_layoutReporting);
+
+		_analysisService.GetHistogramData(Arg.Any<IEnumerable<KeybrSession>>(), Arg.Any<DateTime>())
+			.Returns(histogram);
+
+		// Act
+		sut.GenerateFullReport(sessions, histogram);
+
+		// Assert
+		_layoutReporting.Received(3).PrintKeyboardLayout(Arg.Any<KeyboardMode>());
+		_performanceReporting.ReceivedWithAnyArgs().PrintAllKeysPerformanceTable(default!);
+		_performanceReporting.ReceivedWithAnyArgs().PrintTargetKeys(default!, default!, default!, default!);
+		_performanceReporting.ReceivedWithAnyArgs().PrintCriticalTargetsTable(default!, default!);
+	}
 }

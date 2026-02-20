@@ -48,23 +48,26 @@ public class KeyboardLayoutReportingService(
 		return trimmed == "SPACE" || trimmed == "TAB" || trimmed == "CAPS" || trimmed == "ENTER" || trimmed == "BACKSPACE" || trimmed.Contains("SHIFT", StringComparison.Ordinal);
 	}
 
-	private static string GetFingerColor(char c) => c switch
+	private static string GetFingerColor(char c)
 	{
-		'~' or '`' or '1' or '!' or 'q' or 'Q' or 'a' or 'A' or 'z' or 'Z' => Ansi.BgBlue,
-		'2' or '@' or 'w' or 'W' or 's' or 'S' or 'x' or 'X' => Ansi.BgYellow,
-		'3' or '#' or 'e' or 'E' or 'd' or 'D' or 'c' or 'C' => Ansi.BgRed,
-		'4' or '$' or '5' or '%' or 'r' or 'R' or 't' or 'T' or 'f' or 'F' or 'g' or 'G' or 'v' or 'V' or 'b' or 'B' => Ansi.BgGreen,
-		' ' => Ansi.BgMagenta,
-		'6' or '^' or '7' or '&' or 'y' or 'Y' or 'u' or 'U' or 'h' or 'H' or 'j' or 'J' or 'n' or 'N' or 'm' or 'M' => Ansi.BgCyan,
-		'8' or '*' or 'i' or 'I' or 'k' or 'K' or ',' or '<' => Ansi.BgRed,
-		'9' or '(' or 'o' or 'O' or 'l' or 'L' or '.' or '>' => Ansi.BgYellow,
-		'0' or ')' or '-' or '_' or '=' or '+' or 'p' or 'P' or '[' or '{' or ']' or '}' or '\\' or '|' or ';' or ':' or '\'' or '\"' or '/' or '?' => Ansi.BgBlue,
-		_ => string.Empty
-	};
+		return c switch
+		{
+			_ when "~`1!qQaAzZ".Contains(c, StringComparison.Ordinal) => Ansi.BgBlue,
+			_ when "2@wWsSxX".Contains(c, StringComparison.Ordinal) => Ansi.BgYellow,
+			_ when "3#eEdDcC".Contains(c, StringComparison.Ordinal) => Ansi.BgRed,
+			_ when "4$5%rRtTfFgGvVbB".Contains(c, StringComparison.Ordinal) => Ansi.BgGreen,
+			' ' => Ansi.BgMagenta,
+			_ when "6^7&yYuUhHjJnNmM".Contains(c, StringComparison.Ordinal) => Ansi.BgCyan,
+			_ when "8*iIkK,<".Contains(c, StringComparison.Ordinal) => Ansi.BgRed,
+			_ when "9(oOlL.>".Contains(c, StringComparison.Ordinal) => Ansi.BgYellow,
+			_ when "0)-_=+pP[{]}\\|;:'\"/?".Contains(c, StringComparison.Ordinal) => Ansi.BgBlue,
+			_ => string.Empty
+		};
+	}
 
 	private static string GetKeyTypeColorBg(char c)
 	{
-		if (char.IsLower(c) || char.IsUpper(c))
+		if (char.IsLetter(c))
 		{
 			return char.IsLower(c) ? Ansi.BgBlue : Ansi.BgCyan;
 		}

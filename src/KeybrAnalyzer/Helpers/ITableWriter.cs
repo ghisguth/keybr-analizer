@@ -9,6 +9,21 @@ public interface ITableWriter
 
 public partial class TableWriter(TextWriter writer) : ITableWriter
 {
+	private static readonly HashSet<int> WideRunes =
+	[
+		0x26A1, // ⚡
+		0x2328, // ⌨️
+		0x2705, // ✅
+		0x2713, // ✓
+		0x1F3AF, // 🎯
+		0x1F4CA, // 📊
+		0x1F512, // 🔒
+		0x23F3, // ⏳
+		0x1F4A5, // 💥
+		0x1F9CA, // 🧊
+		0x1F40C // 🐌
+	];
+
 	private readonly TextWriter _writer = writer ?? throw new ArgumentNullException(nameof(writer));
 
 	public void WriteTable(string[] headers, IEnumerable<string[]> rows, bool[]? rightAlign = null, int maxColumns = 100, string? title = null)
@@ -30,23 +45,7 @@ public partial class TableWriter(TextWriter writer) : ITableWriter
 			return;
 		}
 
-		var startIndex = 1;
-		while (startIndex < headers.Length)
-		{
-			var columnIndices = new List<int> { 0 };
-			for (var i = 0; i < maxColumns && startIndex + i < headers.Length; i++)
-			{
-				columnIndices.Add(startIndex + i);
-			}
-
-			PrintTablePage(headers, rowList, rightAlign, allColumnWidths, [.. columnIndices], title);
-			startIndex += maxColumns;
-
-			if (startIndex < headers.Length)
-			{
-				_writer.WriteLine();
-			}
-		}
+		PrintChunkedTables(headers, rowList, rightAlign, maxColumns, title, allColumnWidths);
 	}
 
 	private static int[] CalculateColumnWidths(string[] headers, List<string[]> rows)
@@ -78,25 +77,31 @@ public partial class TableWriter(TextWriter writer) : ITableWriter
 		return length;
 	}
 
-	private static bool IsWide(int value) =>
-		value switch
-		{
-			0x26A1 => true, // ⚡
-			0x2328 => true, // ⌨️
-			0x2705 => true, // ✅
-			0x2713 => true, // ✓
-			0x1F3AF => true, // 🎯
-			0x1F4CA => true, // 📊
-			0x1F512 => true, // 🔒
-			0x23F3 => true, // ⏳
-			0x1F4A5 => true, // 💥
-			0x1F9CA => true, // 🧊
-			0x1F40C => true, // 🐌
-			_ => false
-		};
+	private static bool IsWide(int value) => WideRunes.Contains(value);
 
 	[GeneratedRegex(@"\u001b\[[0-9;]*m")]
 	private static partial Regex StripAnsiCodesRegex();
+
+	private void PrintChunkedTables(string[] headers, List<string[]> rowList, bool[]? rightAlign, int maxColumns, string? title, int[] allColumnWidths)
+	{
+		var startIndex = 1;
+		while (startIndex < headers.Length)
+		{
+			var columnIndices = new List<int> { 0 };
+			for (var i = 0; i < maxColumns && startIndex + i < headers.Length; i++)
+			{
+				columnIndices.Add(startIndex + i);
+			}
+
+			PrintTablePage(headers, rowList, rightAlign, allColumnWidths, [.. columnIndices], title);
+			startIndex += maxColumns;
+
+			if (startIndex < headers.Length)
+			{
+				_writer.WriteLine();
+			}
+		}
+	}
 
 	private void PrintTablePage(string[] allHeaders, List<string[]> allRows, bool[]? allRightAlign, int[] allWidths, int[] columnIndices, string? title)
 	{

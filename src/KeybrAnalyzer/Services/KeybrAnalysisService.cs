@@ -97,6 +97,16 @@ public class KeybrAnalysisService : IKeybrAnalysisService
 		var l7 = allEntries.Where(e => e.TimeLocal.Date > latestDate.AddDays(-7)).ToList();
 		var l3 = allEntries.Where(e => e.TimeLocal.Date > latestDate.AddDays(-3)).ToList();
 		var l1 = allEntries.Where(e => e.TimeLocal.Date > latestDate.AddDays(-1)).ToList();
+		var d1 = allEntries.Where(e => e.TimeLocal.Date == latestDate).ToList();
+		var d2 = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-1)).ToList();
+		var d3 = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-2)).ToList();
+		var prev7 = allEntries.Where(e => e.TimeLocal.Date < latestDate && e.TimeLocal.Date >= latestDate.AddDays(-7)).ToList();
+
+		var (l3H, l3Miss, l3Err, l3Wpm) = GetMetrics(l3);
+		var (l1H, l1Miss, l1Err, l1Wpm) = GetMetrics(l1);
+		var (d1H, d1Miss, d1Err, d1Wpm) = GetMetrics(d1);
+		var (d2H, d2Miss, d2Err, d2Wpm) = GetMetrics(d2);
+		var (d3H, d3Miss, d3Err, d3Wpm) = GetMetrics(d3);
 
 		var l7H = l7.Sum(e => e.Entry.HitCount);
 		var l7Latency = l7H > 0 ? l7.Sum(e => e.Entry.TimeToType * e.Entry.HitCount) / l7H : 0;
@@ -114,12 +124,6 @@ public class KeybrAnalysisService : IKeybrAnalysisService
 			.Select(date => allEntries.Where(e => e.TimeLocal.Date == date).CalculateWpm())
 			.ToList();
 
-		var d1 = allEntries.Where(e => e.TimeLocal.Date == latestDate).ToList();
-		var d2 = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-1)).ToList();
-		var prev7 = allEntries.Where(e => e.TimeLocal.Date < latestDate && e.TimeLocal.Date >= latestDate.AddDays(-7)).ToList();
-
-		var d1Err = d1.CalculateErr();
-		var d2Err = d2.CalculateErr();
 		var prev7Err = prev7.CalculateErr();
 
 		return new()
@@ -145,30 +149,30 @@ public class KeybrAnalysisService : IKeybrAnalysisService
 			L7Wpm = l7.CalculateWpm(),
 			L7CV = l7CV,
 
-			L3H = l3.Sum(e => e.Entry.HitCount),
-			L3M = l3.Sum(e => e.Entry.MissCount),
-			L3Err = l3.CalculateErr(),
-			L3Wpm = l3.CalculateWpm(),
+			L3H = l3H,
+			L3M = l3Miss,
+			L3Err = l3Err,
+			L3Wpm = l3Wpm,
 
-			L1H = l1.Sum(e => e.Entry.HitCount),
-			L1M = l1.Sum(e => e.Entry.MissCount),
-			L1Err = l1.CalculateErr(),
-			L1Wpm = l1.CalculateWpm(),
+			L1H = l1H,
+			L1M = l1Miss,
+			L1Err = l1Err,
+			L1Wpm = l1Wpm,
 
-			D1H = d1.Sum(e => e.Entry.HitCount),
-			D1M = d1.Sum(e => e.Entry.MissCount),
+			D1H = d1H,
+			D1M = d1Miss,
 			D1Err = d1Err,
-			D1Wpm = d1.CalculateWpm(),
+			D1Wpm = d1Wpm,
 
-			D2H = d2.Sum(e => e.Entry.HitCount),
-			D2M = d2.Sum(e => e.Entry.MissCount),
+			D2H = d2H,
+			D2M = d2Miss,
 			D2Err = d2Err,
-			D2Wpm = d2.CalculateWpm(),
+			D2Wpm = d2Wpm,
 
-			D3H = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-2)).Sum(e => e.Entry.HitCount),
-			D3M = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-2)).Sum(e => e.Entry.MissCount),
-			D3Err = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-2)).CalculateErr(),
-			D3Wpm = allEntries.Where(e => e.TimeLocal.Date == latestDate.AddDays(-2)).CalculateWpm(),
+			D3H = d3H,
+			D3M = d3Miss,
+			D3Err = d3Err,
+			D3Wpm = d3Wpm,
 
 			DailyWpm = dailyWpms,
 			Improvement = (d1.Count > 0 && prev7.Count > 0) ? d1Err - prev7Err : 0,
@@ -176,6 +180,9 @@ public class KeybrAnalysisService : IKeybrAnalysisService
 			L7Impact = l7H * l7Err / 100.0
 		};
 	}
+
+	private static (int H, int M, double Err, double Wpm) GetMetrics(List<HistogramEntryLocal> entries) =>
+		(entries.Sum(e => e.Entry.HitCount), entries.Sum(e => e.Entry.MissCount), entries.CalculateErr(), entries.CalculateWpm());
 
 	private static AccuracyStreak CreateStreak(double threshold, List<KeybrSession> streakSessions)
 	{

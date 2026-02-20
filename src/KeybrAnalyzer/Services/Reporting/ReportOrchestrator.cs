@@ -72,43 +72,27 @@ public class ReportOrchestrator(
 
 		var codeAllSess = sessions.Where(s => s.TextType is "code" or "natural").ToList();
 
-		if (codeAllSess.Count > 0)
-		{
-			var codeHist = analysisService.GetHistogramData(codeAllSess, maxDate);
-			var data = codeHist.Where(h => h.L7H >= Constants.MinL7Hits).OrderBy(h => h.Mastery).Take(Constants.TopKeysCount);
-			performanceReporting.PrintKeyPerformanceTable([.. data], "C# CODE MASTERY (TOP 20)");
-		}
+		PrintFilteredMasteryTable(codeAllSess, maxDate, "C# CODE MASTERY (TOP 20)");
 
 		if (options.Value.ShowAllStats)
 		{
-			if (codeSess.Count > 0)
-			{
-				var codeHist = analysisService.GetHistogramData(codeSess, maxDate);
-				var data = codeHist.Where(h => h.L7H >= Constants.MinL7Hits).OrderBy(h => h.Mastery).Take(Constants.TopKeysCount);
-				performanceReporting.PrintKeyPerformanceTable([.. data], "C# CODE ONLY MASTERY (TOP 20)");
-			}
-
-			if (genSess.Count > 0)
-			{
-				var genHist = analysisService.GetHistogramData(genSess, maxDate);
-				var data = genHist.Where(h => h.L7H >= Constants.MinL7Hits).OrderBy(h => h.Mastery).Take(Constants.TopKeysCount);
-				performanceReporting.PrintKeyPerformanceTable([.. data], "GUIDED MASTERY (TOP 20)");
-			}
-
-			if (numbersSess.Count > 0)
-			{
-				var numbersHist = analysisService.GetHistogramData(numbersSess, maxDate);
-				var data = numbersHist.Where(h => h.L7H >= Constants.MinL7Hits).OrderBy(h => h.Mastery).Take(Constants.TopKeysCount);
-				performanceReporting.PrintKeyPerformanceTable([.. data], "NUMBERS MASTERY (TOP 20)");
-			}
-
-			if (naturalSess.Count > 0)
-			{
-				var naturalHist = analysisService.GetHistogramData(naturalSess, maxDate);
-				var data = naturalHist.Where(h => h.L7H >= Constants.MinL7Hits).OrderBy(h => h.Mastery).Take(Constants.TopKeysCount);
-				performanceReporting.PrintKeyPerformanceTable([.. data], "CUSTOM TEXT MASTERY (TOP 20)");
-			}
+			PrintFilteredMasteryTable(codeSess, maxDate, "C# CODE ONLY MASTERY (TOP 20)");
+			PrintFilteredMasteryTable(genSess, maxDate, "GUIDED MASTERY (TOP 20)");
+			PrintFilteredMasteryTable(numbersSess, maxDate, "NUMBERS MASTERY (TOP 20)");
+			PrintFilteredMasteryTable(naturalSess, maxDate, "CUSTOM TEXT MASTERY (TOP 20)");
 		}
+	}
+
+	private void PrintFilteredMasteryTable(List<KeybrSession> filteredSessions, DateTime maxDate, string title)
+	{
+		if (filteredSessions.Count == 0)
+		{
+			return;
+		}
+
+		var hist = analysisService.GetHistogramData(filteredSessions, maxDate);
+		var data = hist.Where(h => h.L7H >= Constants.MinL7Hits).OrderBy(h => h.Mastery).Take(Constants.TopKeysCount);
+		performanceReporting.PrintKeyPerformanceTable([.. data], title);
 	}
 
 	private void PrintTargetTables(IReadOnlyList<KeyPerformance> histogram)

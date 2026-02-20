@@ -75,11 +75,59 @@ public sealed class KeybrDataServiceTests : IDisposable
 		result[0].TextType.ShouldBe("code");
 	}
 
+	[Fact]
+	public async Task LoadLatestSessionsAsyncNoFileLogsAndReturnsNullAsync()
+	{
+		_options.Value.Returns(new KeybrAnalyzerOptions { SourceDirectory = _testDir }); // _testDir empty
+		var sut = new TestableKeybrDataService(_logger, _options, Path.Combine(_testDir, "MockDownloads"));
+		var result = await sut.LoadLatestSessionsAsync(TestContext.Current.CancellationToken);
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void GetLatestDataFilePathDataFilePathExistsReturnsIt()
+	{
+		var explicitFile = Path.Combine(_testDir, "explicit.json");
+		File.WriteAllText(explicitFile, "[]");
+		_options.Value.Returns(new KeybrAnalyzerOptions { DataFilePath = explicitFile });
+		var sut = new KeybrDataService(_logger, _options);
+		var result = sut.GetLatestDataFilePath();
+		result.ShouldBe(explicitFile);
+	}
+
+	[Fact]
+	public void GetLatestDataFilePathDataFilePathDoesNotExistFallsBackToDirectorySearch()
+	{
+		var explicitFile = Path.Combine(_testDir, "explicit.json"); // doesn't exist
+		_options.Value.Returns(new KeybrAnalyzerOptions { DataFilePath = explicitFile, SourceDirectory = _testDir });
+		var fallbackFile = Path.Combine(_testDir, "typing-data-fallback.json");
+		File.WriteAllText(fallbackFile, "[]");
+
+		var sut = new TestableKeybrDataService(_logger, _options, Path.Combine(_testDir, "MockDownloads"));
+		var result = sut.GetLatestDataFilePath();
+		result.ShouldBe(fallbackFile);
+	}
+
+	[Fact]
+	public void GetLatestDataFilePathNoFilesAnywhereReturnsNull()
+	{
+		_options.Value.Returns(new KeybrAnalyzerOptions { SourceDirectory = Path.Combine(_testDir, "nonexistent") });
+		var sut = new TestableKeybrDataService(_logger, _options, Path.Combine(_testDir, "MockDownloads"));
+		var result = sut.GetLatestDataFilePath();
+		result.ShouldBeNull();
+	}
+
 	public void Dispose()
 	{
 		if (Directory.Exists(_testDir))
 		{
 			Directory.Delete(_testDir, true);
 		}
+	}
+
+	private sealed class TestableKeybrDataService(ILogger<KeybrDataService> logger, IOptions<KeybrAnalyzerOptions> options, string downloadsDir)
+		: KeybrDataService(logger, options)
+	{
+		protected override string GetDownloadsDirectory() => downloadsDir;
 	}
 }
