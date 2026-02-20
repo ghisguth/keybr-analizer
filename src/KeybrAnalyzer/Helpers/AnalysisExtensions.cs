@@ -17,7 +17,7 @@ public static class AnalysisExtensions
 		var list = entries.ToList();
 		var h = list.Sum(e => e.Entry.HitCount);
 		var t = list.Sum(e => e.Entry.TimeToType * e.Entry.HitCount);
-		return (h > 0) ? Math.Min(100, 12000 / ((t / h) + 0.000001)) : 0;
+		return (h > 0) ? 12000 / ((t / h) + 0.000001) : 0;
 	}
 
 	public static double CalculateCV(this IEnumerable<HistogramEntryLocal> entries, double avgLatency, int totalHits)

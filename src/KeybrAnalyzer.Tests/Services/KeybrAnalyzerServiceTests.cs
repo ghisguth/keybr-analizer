@@ -45,7 +45,7 @@ public sealed class KeybrAnalyzerServiceTests : IDisposable
 			.Returns((List<KeybrSession>?)null);
 
 		// Act
-		await _sut.RunLogicAsync(CancellationToken.None);
+		await _sut.RunLogicAsync(TestContext.Current.CancellationToken);
 
 		// Assert
 		_analysisService.DidNotReceiveWithAnyArgs().GetHistogramData(default!, default);
@@ -69,7 +69,7 @@ public sealed class KeybrAnalyzerServiceTests : IDisposable
 			.Returns(histogram);
 
 		// Act
-		await _sut.RunLogicAsync(CancellationToken.None);
+		await _sut.RunLogicAsync(TestContext.Current.CancellationToken);
 
 		// Assert
 		_analysisService.Received(1).GetHistogramData(sessions, Arg.Any<DateTime>());
@@ -86,7 +86,7 @@ public sealed class KeybrAnalyzerServiceTests : IDisposable
 			.Throws(exception);
 
 		// Act & Assert
-		var result = await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RunLogicAsync(CancellationToken.None));
+		var result = await Should.ThrowAsync<InvalidOperationException>(() => _sut.RunLogicAsync(TestContext.Current.CancellationToken));
 		result.Message.ShouldBe("Test exception");
 
 		_hostApplicationLifetime.Received(1).StopApplication();

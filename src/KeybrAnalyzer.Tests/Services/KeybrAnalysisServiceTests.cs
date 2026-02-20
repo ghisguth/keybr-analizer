@@ -31,14 +31,16 @@ public class KeybrAnalysisServiceTests
 		streaks.Count.ShouldBe(3);
 
 		// 100% threshold: longest is last 3 sessions, which is also current
-		var s100 = streaks.First(s => s.Threshold == 100.0);
+		streaks.ShouldContain(s => s.Threshold == 100.0);
+		var s100 = streaks.Single(s => s.Threshold == 100.0);
 		s100.IsMax.ShouldBeTrue();
 		s100.IsCurrent.ShouldBeTrue();
 		s100.Lessons.ShouldBe(3);
 		s100.StartDate.ShouldBe(new DateTime(2026, 1, 1, 10, 15, 0, DateTimeKind.Local));
 
 		// 95% threshold: all 6 sessions are both max and current
-		var s95 = streaks.First(s => s.Threshold == 95.0);
+		streaks.ShouldContain(s => s.Threshold == 95.0);
+		var s95 = streaks.Single(s => s.Threshold == 95.0);
 		s95.IsMax.ShouldBeTrue();
 		s95.IsCurrent.ShouldBeTrue();
 		s95.Lessons.ShouldBe(6);
@@ -89,6 +91,40 @@ public class KeybrAnalysisServiceTests
 		aPerf.P50.ShouldBe(400);
 		aPerf.P95.ShouldBe(1000);
 		aPerf.StallRatio.ShouldBe(2.5);
+	}
+
+	[Fact]
+	public void GetAccuracyStreaksShouldReturnEmptyWhenNoSessions()
+	{
+		var sessions = new List<KeybrSession>();
+		var streaks = _sut.GetAccuracyStreaks(sessions, [100.0]);
+		streaks.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetAccuracyStreaksShouldHandleZeroLengthSessionGracefully()
+	{
+		var sessions = new List<KeybrSession>
+		{
+			CreateSession(DateTime.Now, 0, 0, 100),
+		};
+
+		var streaks = _sut.GetAccuracyStreaks(sessions, [100.0]);
+		streaks.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetHistogramDataShouldNotCapWpmAt100()
+	{
+		var maxDate = DateTime.Now;
+		var sessions = new List<KeybrSession>
+		{
+			new(maxDate.ToUniversalTime(), 200, 0, 10, 60000, "code", [new HistogramEntry(65, 10, 0, 10)]), // 'A' key, 10ms latency
+		};
+
+		var results = _sut.GetHistogramData(sessions, maxDate);
+		var aPerf = results.ShouldHaveSingleItem();
+		aPerf.AllWpm.ShouldBe(1200, tolerance: 1);
 	}
 
 	private static KeybrSession CreateSession(DateTime timeStamp, int length, int errors, double speed)

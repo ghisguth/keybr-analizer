@@ -38,6 +38,18 @@ public sealed class AnalysisExtensionsTests
 	}
 
 	[Fact]
+	public void CalculateWpmShouldNotCapAt100()
+	{
+		var entries = new List<HistogramEntryLocal>
+		{
+			new(new HistogramEntry(65, 10, 0, 10), DateTime.Now)
+		};
+
+		// Expected 12000 / 10 = 1200 WPM
+		entries.CalculateWpm().ShouldBe(1200.0, 0.1);
+	}
+
+	[Fact]
 	public void CalculateCVShouldReturnZeroOnNoHits()
 	{
 		var entries = new List<HistogramEntryLocal>

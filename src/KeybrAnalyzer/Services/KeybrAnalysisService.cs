@@ -54,7 +54,7 @@ public class KeybrAnalysisService : IKeybrAnalysisService
 
 		foreach (var session in sortedSessions)
 		{
-			var accuracy = (1.0 - ((double)session.Errors / session.Length)) * 100;
+			var accuracy = session.Length > 0 ? (1.0 - ((double)session.Errors / session.Length)) * 100 : 0;
 			if (accuracy >= threshold)
 			{
 				currentStreakSessions.Add(session);
@@ -130,7 +130,7 @@ public class KeybrAnalysisService : IKeybrAnalysisService
 			AllM = allM,
 			Latency = latency,
 			AllErr = allErr,
-			AllWpm = allH > 0 ? Math.Min(100, 12000 / ((totalTime / allH) + 0.000001)) : 0,
+			AllWpm = allH > 0 ? 12000 / ((totalTime / allH) + 0.000001) : 0,
 
 			CV = cv,
 			Mastery = KeyMetricCalculator.CalculateMastery(latency, allErr, cv, KeyMetricCalculator.GetCSharpWeight(codePoint)),
