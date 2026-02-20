@@ -30,15 +30,15 @@ public class ReportOrchestrator(
 	{
 		var todaySess = sessions.Where(s => s.TimeStamp.ToLocalTime().Date == maxDate.Date).ToList();
 		var l7Sess = sessions.Where(s => s.TimeStamp.ToLocalTime() >= maxDate.AddDays(-7)).ToList();
-		var codeSess = sessions.Where(s => s.TextType is "code" or "natural").ToList();
-		var normalSess = sessions.Where(s => s.TextType == "generated").ToList();
+		var l7CodeSess = l7Sess.Where(s => s.TextType == "code").ToList();
+		var l7NaturalSess = l7Sess.Where(s => s.TextType == "natural").ToList();
 
 		summaryReporting.PrintHeader();
 
-		if (codeSess.Count > 0 && normalSess.Count > 0)
+		if (l7CodeSess.Count > 0 && l7NaturalSess.Count > 0)
 		{
-			var delta = (normalSess.Average(s => s.Speed) - codeSess.Average(s => s.Speed)) / 5.0;
-			var color = delta <= 0 ? Ansi.Green : Ansi.Red;
+			var delta = (l7NaturalSess.Average(s => s.Speed) - l7CodeSess.Average(s => s.Speed)) / 5.0;
+			var color = delta >= 0 ? Ansi.Green : Ansi.Red;
 			summaryReporting.PrintHeaderMetric("DOMAIN GAP (CODE vs NATURAL)", $"{color}{delta:F1} WPM{Ansi.Reset}");
 		}
 
