@@ -30,16 +30,20 @@ public class ReportOrchestrator(
 	{
 		var todaySess = sessions.Where(s => s.TimeStamp.ToLocalTime().Date == maxDate.Date).ToList();
 		var l7Sess = sessions.Where(s => s.TimeStamp.ToLocalTime() >= maxDate.AddDays(-7)).ToList();
-		var l7CodeSess = l7Sess.Where(s => s.TextType == "code").ToList();
-		var l7NaturalSess = l7Sess.Where(s => s.TextType == "natural").ToList();
+		var l7CodeSess = l7Sess.Where(s => s.TextType is "code" or "natural").ToList();
+		var l7ProseSess = l7Sess.Where(s => s.TextType == "generated").ToList();
 
 		summaryReporting.PrintHeader();
 
-		if (l7CodeSess.Count > 0 && l7NaturalSess.Count > 0)
+		if (l7CodeSess.Count > 0 && l7ProseSess.Count > 0)
 		{
-			var delta = (l7NaturalSess.Average(s => s.Speed) - l7CodeSess.Average(s => s.Speed)) / 5.0;
+			var codeWpm = l7CodeSess.Average(s => s.Speed) / 5.0;
+			var proseWpm = l7ProseSess.Average(s => s.Speed) / 5.0;
+			var totalSamples = l7CodeSess.Count + l7ProseSess.Count;
+
+			var delta = codeWpm - proseWpm;
 			var color = delta >= 0 ? Ansi.Green : Ansi.Red;
-			summaryReporting.PrintHeaderMetric("DOMAIN GAP (CODE vs NATURAL)", $"{color}{delta:F1} WPM{Ansi.Reset}");
+			summaryReporting.PrintHeaderMetric($"DOMAIN GAP (CODE vs PROSE) [C={l7CodeSess.Count}, P={l7ProseSess.Count}]", $"{color}{delta:F1} WPM{Ansi.Reset}");
 		}
 
 		summaryReporting.PrintSessionSummary(todaySess, "STATISTICS FOR TODAY");

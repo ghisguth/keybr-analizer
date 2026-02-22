@@ -53,7 +53,7 @@ public sealed class ReportOrchestratorTests
 	}
 
 	[Fact]
-	public void DomainGapShouldCompareNaturalVsCodeFromL7Sessions()
+	public void DomainGapShouldCompareCodeVsProseFromL7Sessions()
 	{
 		// Arrange
 		var now = DateTime.Now;
@@ -62,8 +62,12 @@ public sealed class ReportOrchestratorTests
 			// 150 CPM = 30 WPM (code)
 			new(now, 150, 0, 10, 60000, "code", []),
 
-			// 100 CPM = 20 WPM (natural)
+			// 100 CPM = 20 WPM (natural -> also code)
 			new(now, 100, 0, 10, 60000, "natural", []),
+
+			// Avg Code Speed = 125 CPM = 25 WPM
+			// 200 CPM = 40 WPM (generated -> prose)
+			new(now, 200, 0, 10, 60000, "generated", []),
 
 			// Old sessions (should be ignored)
 			new(now.AddDays(-10), 500, 0, 10, 60000, "code", []),
@@ -83,8 +87,9 @@ public sealed class ReportOrchestratorTests
 		sut.GenerateFullReport(sessions, []);
 
 		// Assert
-		// It should be (100 - 150) / 5 = -10.0
-		_summaryReporting.Received().PrintHeaderMetric("DOMAIN GAP (CODE vs NATURAL)", Arg.Is<string>(s => s.Contains("-10.0 WPM")));
+		// Code WPM = 25. Prose WPM = 40. Delta = 25 - 40 = -15.0
+		// Total L7 samples: Code=2, Prose=1
+		_summaryReporting.Received().PrintHeaderMetric(Arg.Is<string>(s => s.Contains("DOMAIN GAP (CODE vs PROSE)") && s.Contains("C=2") && s.Contains("P=1")), Arg.Is<string>(s => s.Contains("-15.0 WPM")));
 	}
 
 	[Fact]
@@ -95,7 +100,10 @@ public sealed class ReportOrchestratorTests
 		var sessions = new List<KeybrSession>
 		{
 			new(now, 200, 0, 10, 60000, "code", []),
-			new(now.AddDays(-10), 100, 0, 10, 60000, "natural", [])
+			new(now, 200, 0, 10, 60000, "natural", []),
+
+			// Missing "generated" (prose)
+			new(now.AddDays(-10), 100, 0, 10, 60000, "generated", [])
 		};
 
 		var sut = new ReportOrchestrator(
