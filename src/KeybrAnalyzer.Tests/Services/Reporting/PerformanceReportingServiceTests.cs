@@ -19,7 +19,7 @@ public sealed class PerformanceReportingServiceTests
 		var sut = new PerformanceReportingService(_consoleHelper);
 		var data = new List<KeyPerformance>
 		{
-			new() { Key = "A", DailyWpm = new List<double> { 50 } }
+			new() { Key = "A", DailyWpm = new List<double> { 50 }, L7H = 100, L1H = 10 }
 		};
 
 		// Act
@@ -27,9 +27,9 @@ public sealed class PerformanceReportingServiceTests
 
 		// Assert
 		_consoleHelper.Received().WriteTable(
-			Arg.Any<string[]>(),
-			Arg.Is<IEnumerable<string[]>>(x => x.ToList().Count > 0),
-			Arg.Any<bool[]>(),
+			Arg.Is<string[]>(h => h.Length == 10 && h[1] == "N (L7)" && h[2] == "N (L1)"),
+			Arg.Is<IEnumerable<string[]>>(x => x.Any(r => r[1] == "100" && r[2] == "10")),
+			Arg.Is<bool[]>(a => a.Length == 10 && !a[0] && a[1] && a[2] && !a[9]),
 			title: "TITLE");
 	}
 

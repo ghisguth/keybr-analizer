@@ -9,7 +9,7 @@ public class PerformanceReportingService(IConsoleHelper consoleHelper) : IPerfor
 	{
 		ArgumentNullException.ThrowIfNull(data);
 
-		string[] headers = ["Key", "N (L7)", "Latency (L7)", "Err (L7)", "CV (L7)", "Mastery", "L3 Err", "L1 Err", "Trend (WPM)"];
+		string[] headers = ["Key", "N (L7)", "N (L1)", "Latency (L7)", "Err (L7)", "CV (L7)", "Mastery", "L3 Err", "L1 Err", "Trend (WPM)"];
 		var rows = data.Select(h =>
 		{
 			var nonZeroDaily = h.DailyWpm.Where(v => v > 0).ToList();
@@ -19,6 +19,7 @@ public class PerformanceReportingService(IConsoleHelper consoleHelper) : IPerfor
 			{
 				h.Key,
 				$"{h.L7H}",
+				$"{h.L1H}",
 				$"{h.L7Latency:F0}ms",
 				h.L7Err.FormatError(),
 				$"{h.L7CV:F3}",
@@ -28,7 +29,7 @@ public class PerformanceReportingService(IConsoleHelper consoleHelper) : IPerfor
 				consoleHelper.GetSparkline(h.DailyWpm, maxWidth: Constants.SparklineWidth, min: min, max: max)
 			};
 		});
-		consoleHelper.WriteTable(headers, rows, [false, true, true, true, true, true, true, true, false], title: title);
+		consoleHelper.WriteTable(headers, rows, [false, true, true, true, true, true, true, true, true, false], title: title);
 
 		consoleHelper.WriteLine($"{Ansi.Bold}Legend:{Ansi.Reset}");
 		consoleHelper.WriteLine($"  {Ansi.Bold}Latency{Ansi.Reset} : Average time to type the key (lower is better)");
@@ -43,17 +44,18 @@ public class PerformanceReportingService(IConsoleHelper consoleHelper) : IPerfor
 		ArgumentNullException.ThrowIfNull(data);
 
 		var ordered = data.OrderByDescending(selector);
-		string[] headers = ["Key", "N (L7)", "Latency", "Error", "CV", "Impact"];
+		string[] headers = ["Key", "N (L7)", "N (L1)", "Latency", "Error", "CV", "Impact"];
 		var rows = ordered.Take(top).Select(h => new[]
 		{
 			h.Key,
 			$"{h.L7H}",
+			$"{h.L1H}",
 			$"{h.L7Latency:F0}ms",
 			h.L7Err.FormatError(),
 			$"{h.L7CV:F3}",
 			$"{h.L7Impact:F2}"
 		});
-		consoleHelper.WriteTable(headers, rows, [false, true, true, true, true, true], title: title);
+		consoleHelper.WriteTable(headers, rows, [false, true, true, true, true, true, true], title: title);
 	}
 
 	public void PrintStallAnalysisTable(IEnumerable<KeyPerformance> data, string title, int top = 15)
@@ -95,7 +97,7 @@ public class PerformanceReportingService(IConsoleHelper consoleHelper) : IPerfor
 		var criticalKeys = byHesitation.Union(byImpact).Union(byStall).Union(byLatency)
 			.OrderByDescending(h => h.L7Impact + (h.StallRatio * 10)).ToList();
 
-		string[] headers = ["Key", "N (L7)", "Latency", "Err", "P95/P50", "Flags"];
+		string[] headers = ["Key", "N (L7)", "N (L1)", "Latency", "Err", "P95/P50", "Flags"];
 		var rows = criticalKeys.Select(h =>
 		{
 			var flags = new List<string>();
@@ -123,13 +125,14 @@ public class PerformanceReportingService(IConsoleHelper consoleHelper) : IPerfor
 			{
 				h.Key,
 				$"{h.L7H}",
+				$"{h.L1H}",
 				$"{h.L7Latency:F0}ms",
 				h.L7Err.FormatError(),
 				$"{h.StallRatio:F2}",
 				string.Join(" ", flags)
 			};
 		});
-		consoleHelper.WriteTable(headers, rows, [false, true, true, true, true, false], title: title);
+		consoleHelper.WriteTable(headers, rows, [false, true, true, true, true, true, false], title: title);
 
 		consoleHelper.WriteLine($"{Ansi.Bold}Legend:{Ansi.Reset}");
 		consoleHelper.WriteLine($"  ⏳ {Ansi.Cyan}HESIT {Ansi.Reset} : High Variance (Erratic speed)");
